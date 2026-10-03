@@ -96,7 +96,17 @@ export function Navbar({ activePage, onNavigate, totalShipments = 0 }) {
             )}
           </button>
 
-          {/* User Avatar Badge */}
+          {/* User Avatar Badge & Sign In */}
+          {activePage !== 'login' ? (
+            <button 
+              onClick={() => handleNav('login')}
+              className="btn-secondary hide-mobile"
+              style={{ padding: '6px 14px', fontSize: '0.75rem', borderRadius: 'var(--radius-md)' }}
+            >
+              Sign In
+            </button>
+          ) : null}
+
           <div 
             onClick={() => handleNav('settings')}
             className="user-avatar-badge"

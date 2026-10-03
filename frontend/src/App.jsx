@@ -10,6 +10,7 @@ import { ShipmentDetailsPage } from './pages/ShipmentDetailsPage';
 import { GlobalMapPage } from './pages/GlobalMapPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { LoginPage } from './pages/LoginPage';
 import { shipmentApi } from './api/shipmentApi';
 import { 
   Globe, 
@@ -135,6 +136,7 @@ export function App() {
                 shipments={shipments}
                 stats={stats}
                 onNavigate={setActivePage}
+                onSelectShipment={handleSelectShipment}
               />
             )}
 
@@ -197,6 +199,12 @@ export function App() {
             {activePage === 'settings' && (
               <SettingsPage
                 activePage={activePage}
+                onNavigate={setActivePage}
+              />
+            )}
+
+            {activePage === 'login' && (
+              <LoginPage
                 onNavigate={setActivePage}
               />
             )}

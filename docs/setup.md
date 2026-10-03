@@ -143,9 +143,52 @@ curl -X PATCH http://localhost:8080/api/shipments/SH-DEMO-01/status \
 
 ---
 
-## 6. Standalone Console Mode (Viva / Demo)
+## 7. Frontend & Google Maps Setup
+
+### A. Run Frontend Locally
+Navigate to the `frontend/` directory and install dependencies:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+The application will launch on `http://localhost:5173/` with automated proxy to the Java backend at `http://localhost:8080/`.
+
+### B. Google Maps JavaScript API Configuration (Part 15)
+To activate live satellite and road telemetry in the Global Map view:
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create or select a Google Cloud project.
+3. Enable billing for your project as required by Google Cloud.
+4. Go to **APIs & Services > Library** and enable **Maps JavaScript API**.
+5. Go to **APIs & Services > Credentials** and click **Create Credentials > API key**.
+6. (Recommended) Restrict the API key:
+   - Application restriction: HTTP referrers (`http://localhost:5173/*`, your production domain).
+   - API restriction: Maps JavaScript API.
+7. In `frontend/.env`, set your key:
+   ```env
+   VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+   VITE_GOOGLE_MAP_ID=your_map_id_here
+   ```
+   *(Note: Never commit your real Google Maps API key to Git; it remains local in `frontend/.env`).*
+
+---
+
+## 8. Client Authentication Setup (Supabase Auth)
+The application includes a complete enterprise Login page. To link client-side Supabase authentication:
+1. In the Supabase Dashboard, go to **Authentication > Providers** and ensure Email/Password is enabled.
+2. In `frontend/.env`, set:
+   ```env
+   VITE_SUPABASE_URL=https://your_project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your_anon_public_key
+   ```
+3. If these keys are not set, the frontend operates gracefully in Guest Admin mode for testing and grading.
+
+---
+
+## 9. Standalone Console Mode (Viva / Demo)
 
 For classroom or viva demonstrations of pure core Java OOP without network dependencies, run the console application:
 ```bash
 mvn exec:java -Dexec.mainClass="Main"
 ```
+

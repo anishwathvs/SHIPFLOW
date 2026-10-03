@@ -1,78 +1,71 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import L from 'leaflet';
+import { Loader } from '@googlemaps/js-api-loader';
 import { 
   Globe, 
-  Layers, 
-  ZoomIn, 
-  ZoomOut, 
-  Crosshair, 
   Search, 
-  Filter, 
-  MapPin, 
-  Navigation,
-  ArrowRight,
-  Package,
+  Crosshair, 
+  Navigation, 
+  Layers, 
+  ArrowRight, 
+  ChevronRight,
+  Info,
+  MapPin,
   CheckCircle2,
   Clock,
   XCircle,
-  Truck
+  Truck,
+  Settings,
+  AlertCircle
 } from 'lucide-react';
 import { SidebarNav } from '../components/SidebarNav';
 
-// Geocoding dictionary for cities
+// Curated Geocoding Dictionary for Domestic & Global Logistics Hubs
 const CITY_COORDINATES = {
-  // Indian Cities
-  'chennai': [13.0827, 80.2707],
-  'bengaluru': [12.9716, 77.5946],
-  'bangalore': [12.9716, 77.5946],
-  'mumbai': [19.0760, 72.8777],
-  'mumbai port': [18.9438, 72.8465],
-  'delhi': [28.6139, 77.2090],
-  'delhi hub': [28.5562, 77.1000],
-  'hyderabad': [17.3850, 78.4867],
-  'kolkata': [22.5726, 88.3639],
-  'pune': [18.5204, 73.8567],
-  'ahmedabad': [23.0225, 72.5714],
-  'kochi': [9.9312, 76.2673],
-  'jaipur': [26.9124, 75.7873],
-  'goa': [15.2993, 74.1240],
+  // Indian Logistics Hubs
+  'chennai': { lat: 13.0827, lng: 80.2707 },
+  'bengaluru': { lat: 12.9716, lng: 77.5946 },
+  'bangalore': { lat: 12.9716, lng: 77.5946 },
+  'mumbai': { lat: 19.0760, lng: 72.8777 },
+  'mumbai port': { lat: 18.9438, lng: 72.8465 },
+  'delhi': { lat: 28.6139, lng: 77.2090 },
+  'delhi hub': { lat: 28.5562, lng: 77.1000 },
+  'hyderabad': { lat: 17.3850, lng: 78.4867 },
+  'kolkata': { lat: 22.5726, lng: 88.3639 },
+  'pune': { lat: 18.5204, lng: 73.8567 },
+  'ahmedabad': { lat: 23.0225, lng: 72.5714 },
+  'kochi': { lat: 9.9312, lng: 76.2673 },
+  'jaipur': { lat: 26.9124, lng: 75.7873 },
+  'goa': { lat: 15.2993, lng: 74.1240 },
 
-  // International Logistics Hubs
-  'singapore': [1.3521, 103.8198],
-  'sin': [1.3644, 103.9915],
-  'los angeles': [34.0522, -118.2437],
-  'lax': [33.9416, -118.4085],
-  'new york': [40.7128, -74.0060],
-  'jfk': [40.6413, -73.7781],
-  'london': [51.5074, -0.1278],
-  'lhr': [51.4700, -0.4543],
-  'tokyo': [35.6762, 139.6503],
-  'nrt': [35.7720, 140.3929],
-  'hnd': [35.5494, 139.7798],
-  'dubai': [25.2048, 55.2708],
-  'dxb': [25.2532, 55.3657],
-  'sydney': [33.8688 * -1, 151.2093],
-  'syd': [33.9399 * -1, 151.1753],
-  'frankfurt': [50.1109, 8.6821],
-  'fra': [50.0379, 8.5622],
-  'paris': [48.8566, 2.3522],
-  'cdg': [49.0097, 2.5479],
-  'hong kong': [22.3193, 114.1694],
-  'hkg': [22.3080, 113.9185],
-  'shanghai': [31.2304, 121.4737],
-  'san francisco': [37.7749, -122.4194],
-  'sfo': [37.6213, -122.3790],
-  'chicago': [41.8781, -87.6298],
-  'ord': [41.9742, -87.9073],
-  'toronto': [43.6532, -79.3832],
-  'yyz': [43.6777, -79.6248],
-  'dallas': [32.7767, -96.7970],
-  'dfw': [32.8998, -97.0403],
-  'miami': [25.7617, -80.1918],
-  'mia': [25.7959, -80.2870]
+  // International Hubs
+  'singapore': { lat: 1.3521, lng: 103.8198 },
+  'sin': { lat: 1.3644, lng: 103.9915 },
+  'los angeles': { lat: 34.0522, lng: -118.2437 },
+  'lax': { lat: 33.9416, lng: -118.4085 },
+  'new york': { lat: 40.7128, lng: -74.0060 },
+  'jfk': { lat: 40.6413, lng: -73.7781 },
+  'london': { lat: 51.5074, lng: -0.1278 },
+  'lhr': { lat: 51.4700, lng: -0.4543 },
+  'tokyo': { lat: 35.6762, lng: 139.6503 },
+  'nrt': { lat: 35.7720, lng: 140.3929 },
+  'dubai': { lat: 25.2048, lng: 55.2708 },
+  'dxb': { lat: 25.2532, lng: 55.3657 },
+  'sydney': { lat: -33.8688, lng: 151.2093 },
+  'syd': { lat: -33.9399, lng: 151.1753 },
+  'frankfurt': { lat: 50.1109, lng: 8.6821 },
+  'fra': { lat: 50.0379, lng: 8.5622 },
+  'paris': { lat: 48.8566, lng: 2.3522 },
+  'cdg': { lat: 49.0097, lng: 2.5479 },
+  'hong kong': { lat: 22.3193, lng: 114.1694 },
+  'shanghai': { lat: 31.2304, lng: 121.4737 },
+  'san francisco': { lat: 37.7749, lng: -122.4194 },
+  'chicago': { lat: 41.8781, lng: -87.6298 },
+  'toronto': { lat: 43.6532, lng: -79.3832 },
+  'dallas': { lat: 32.7767, lng: -96.7970 },
+  'miami': { lat: 25.7617, lng: -80.1918 }
 };
 
-function getCoords(cityName) {
+function getCityCoords(cityName) {
   if (!cityName) return null;
   const clean = cityName.trim().toLowerCase();
   
@@ -92,28 +85,10 @@ function getCoords(cityName) {
     hash = (hash << 5) - hash + clean.charCodeAt(i);
     hash |= 0;
   }
-  const lat = 10 + (Math.abs(hash) % 40);
-  const lng = 60 + (Math.abs(hash >> 3) % 60);
-  return [lat, lng];
+  const lat = 12 + (Math.abs(hash) % 36);
+  const lng = 68 + (Math.abs(hash >> 3) % 52);
+  return { lat, lng };
 }
-
-const TILE_LAYERS = {
-  voyager: {
-    name: 'Standard Light',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
-  },
-  osm: {
-    name: 'Standard Streets',
-    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  },
-  satellite: {
-    name: 'Terrain / Satellite',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-  }
-};
 
 const STATUS_COLORS = {
   'CREATED': '#2563eb',     // Blue
@@ -123,16 +98,25 @@ const STATUS_COLORS = {
 };
 
 export function GlobalMapPage({ shipments = [], stats, activePage, onNavigate, onSelectShipment }) {
-  const mapContainerRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const layerGroupRef = useRef(null);
+  const mapRef = useRef(null);
+  const googleMapInstance = useRef(null);
+  const markersRef = useRef([]);
+  const polylinesRef = useRef([]);
+  const infoWindowRef = useRef(null);
 
-  const [tileStyle, setTileStyle] = useState('voyager');
+  const [googleKeyExists, setGoogleKeyExists] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedShipment, setSelectedShipment] = useState(null);
+  const [mapTypeId, setMapTypeId] = useState('roadmap');
 
-  // Filter shipments based on search and status
+  // Check Google Maps API Key from environment
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  const mapId = import.meta.env.VITE_GOOGLE_MAP_ID;
+
+  // Filter shipments based on search & status
   const filteredShipments = useMemo(() => {
     return shipments.filter((s) => {
       const matchStatus = statusFilter === 'ALL' || s.status === statusFilter;
@@ -148,200 +132,219 @@ export function GlobalMapPage({ shipments = [], stats, activePage, onNavigate, o
     });
   }, [shipments, statusFilter, searchQuery]);
 
-  // Initialize Leaflet Map
+  // Initialize Google Maps API
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (!apiKey) {
+      setGoogleKeyExists(false);
+      return;
+    }
 
-    if (!mapInstanceRef.current) {
-      const map = L.map(mapContainerRef.current, {
-        center: [20.5937, 78.9629], // Center around India / Asia
-        zoom: 3,
-        minZoom: 2,
-        maxZoom: 18,
-        zoomControl: false // custom controls
+    setGoogleKeyExists(true);
+
+    const loader = new Loader({
+      apiKey: apiKey,
+      version: 'weekly',
+      libraries: ['places', 'geometry'],
+      mapIds: mapId ? [mapId] : undefined
+    });
+
+    loader.load()
+      .then((google) => {
+        if (!mapRef.current) return;
+
+        const mapOptions = {
+          center: { lat: 20.5937, lng: 78.9629 }, // Center around India / Asia
+          zoom: 3,
+          minZoom: 2,
+          maxZoom: 18,
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
+          disableDefaultUI: true,
+          zoomControl: false,
+          fullscreenControl: false,
+          styles: [
+            { elementType: 'geometry', stylers: [{ color: '#f5f7fa' }] },
+            { elementType: 'labels.text.fill', stylers: [{ color: '#334155' }] },
+            { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+            { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#cbd5e1' }] },
+            { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e0f2fe' }] },
+            { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+            { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#fed7aa' }] }
+          ]
+        };
+
+        if (mapId) {
+          mapOptions.mapId = mapId;
+        }
+
+        const map = new google.maps.Map(mapRef.current, mapOptions);
+        googleMapInstance.current = map;
+        infoWindowRef.current = new google.maps.InfoWindow();
+
+        setMapLoaded(true);
+      })
+      .catch((err) => {
+        console.warn('Google Maps API failed to load:', err);
+        setMapError('Google Maps API key was invalid or rejected. Please check VITE_GOOGLE_MAPS_API_KEY.');
       });
+  }, [apiKey, mapId]);
 
-      const tileConfig = TILE_LAYERS[tileStyle];
-      const tileLayer = L.tileLayer(tileConfig.url, {
-        attribution: tileConfig.attribution,
-        maxZoom: 19
-      }).addTo(map);
-
-      mapInstanceRef.current = map;
-      mapInstanceRef.current._tileLayer = tileLayer;
-
-      const layerGroup = L.layerGroup().addTo(map);
-      layerGroupRef.current = layerGroup;
-    }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, []);
-
-  // Update Tile Layer when style changes
+  // Update Markers and Routes whenever filtered shipments change
   useEffect(() => {
-    if (!mapInstanceRef.current) return;
-    const map = mapInstanceRef.current;
-    if (map._tileLayer) {
-      map.removeLayer(map._tileLayer);
-    }
-    const tileConfig = TILE_LAYERS[tileStyle];
-    const newLayer = L.tileLayer(tileConfig.url, {
-      attribution: tileConfig.attribution,
-      maxZoom: 19
-    }).addTo(map);
-    map._tileLayer = newLayer;
-  }, [tileStyle]);
+    if (!googleMapInstance.current || !window.google) return;
 
-  // Render Markers and Route Polylines
-  useEffect(() => {
-    if (!mapInstanceRef.current || !layerGroupRef.current) return;
+    const map = googleMapInstance.current;
+    const google = window.google;
 
-    const layerGroup = layerGroupRef.current;
-    layerGroup.clearLayers();
+    // Clear existing markers & polylines
+    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current = [];
+    polylinesRef.current.forEach((p) => p.setMap(null));
+    polylinesRef.current = [];
 
-    const bounds = [];
+    const bounds = new google.maps.LatLngBounds();
+    let hasCoords = false;
 
     filteredShipments.forEach((shipment) => {
-      const srcCoords = getCoords(shipment.source);
-      const destCoords = getCoords(shipment.destination);
+      const src = getCityCoords(shipment.source);
+      const dest = getCityCoords(shipment.destination);
       const color = STATUS_COLORS[shipment.status] || '#2563eb';
 
-      // 1. Draw Route Line if both origin and destination exist
-      if (srcCoords && destCoords) {
-        bounds.push(srcCoords);
-        bounds.push(destCoords);
+      // 1. Draw Route Polyline
+      if (src && dest) {
+        bounds.extend(src);
+        bounds.extend(dest);
+        hasCoords = true;
 
         const isTransit = shipment.status === 'IN_TRANSIT';
-        const polyline = L.polyline([srcCoords, destCoords], {
-          color: color,
-          weight: isTransit ? 3.5 : 2.5,
-          opacity: 0.85,
-          dashArray: isTransit ? '8, 8' : undefined,
-          className: isTransit ? 'leaflet-animated-route' : ''
+        const lineSymbol = {
+          path: 'M 0,-1 0,1',
+          strokeOpacity: 1,
+          scale: 3
+        };
+
+        const polyline = new google.maps.Polyline({
+          path: [src, dest],
+          geodesic: true,
+          strokeColor: color,
+          strokeOpacity: isTransit ? 0 : 0.85,
+          strokeWeight: isTransit ? 3 : 2.5,
+          icons: isTransit ? [{
+            icon: lineSymbol,
+            offset: '0',
+            repeat: '14px'
+          }] : undefined,
+          map: map
         });
 
-        polyline.bindTooltip(
-          `<b>${shipment.shipmentId}</b>: ${shipment.source} &rarr; ${shipment.destination} (${shipment.status})`,
-          { sticky: true, className: 'leaflet-custom-tooltip' }
-        );
-
-        polyline.on('click', () => {
+        polyline.addListener('click', () => {
           setSelectedShipment(shipment);
         });
 
-        polyline.addTo(layerGroup);
+        polylinesRef.current.push(polyline);
       }
 
-      // 2. Add Origin Marker
-      if (srcCoords) {
-        const originIcon = L.divIcon({
-          className: 'custom-map-pin-icon',
-          html: `
-            <div class="map-pin-bubble" style="background: ${color}; box-shadow: 0 4px 14px ${color}88;">
-              <div class="map-pin-inner"></div>
-            </div>
-          `,
-          iconSize: [28, 28],
-          iconAnchor: [14, 14]
-        });
-
-        const marker = L.marker(srcCoords, { icon: originIcon });
-
-        // Popup Content
-        const popupContent = `
-          <div class="map-popup-card">
-            <div class="map-popup-header">
-              <span class="map-popup-id">${shipment.shipmentId}</span>
-              <span class="map-popup-badge" style="background: ${color}20; color: ${color}; border: 1px solid ${color}40;">
-                ${shipment.status}
-              </span>
-            </div>
-            <div class="map-popup-route">
-              <strong>${shipment.source}</strong> &rarr; <strong>${shipment.destination}</strong>
-            </div>
-            <div class="map-popup-details">
-              <div><span>Sender:</span> ${shipment.sender}</div>
-              <div><span>Receiver:</span> ${shipment.receiver}</div>
-              <div><span>Package:</span> ${shipment.packageDescription || 'Standard Cargo'}</div>
-              <div><span>Weight:</span> ${shipment.weight} kg</div>
-              <div><span>Cost:</span> ₹${shipment.cost}</div>
-            </div>
-            <button id="btn-details-${shipment.shipmentId}" class="map-popup-btn">
-              View Shipment Details &rarr;
-            </button>
-          </div>
-        `;
-
-        marker.bindPopup(popupContent, { maxWidth: 300, className: 'leaflet-custom-popup' });
-        
-        marker.on('popupopen', () => {
-          const btn = document.getElementById(`btn-details-${shipment.shipmentId}`);
-          if (btn) {
-            btn.onclick = () => {
-              if (onSelectShipment) onSelectShipment(shipment);
-            };
+      // 2. Add Origin Marker with Status Color
+      if (src) {
+        const marker = new google.maps.Marker({
+          position: src,
+          map: map,
+          title: `${shipment.shipmentId} (${shipment.status})`,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: color,
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2.5
           }
         });
 
-        marker.on('click', () => {
+        marker.addListener('click', () => {
           setSelectedShipment(shipment);
-        });
 
-        marker.addTo(layerGroup);
-      }
-
-      // 3. Add Destination Marker
-      if (destCoords && (destCoords[0] !== srcCoords?.[0] || destCoords[1] !== srcCoords?.[1])) {
-        const destIcon = L.divIcon({
-          className: 'custom-map-dest-icon',
-          html: `
-            <div class="map-dest-bubble" style="border-color: ${color};">
-              <div class="map-dest-dot" style="background: ${color};"></div>
+          const content = `
+            <div style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 10px; max-width: 260px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-family: monospace; font-weight: 800; color: #2563eb; font-size: 13px;">${shipment.shipmentId}</span>
+                <span style="background: ${color}20; color: ${color}; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px;">
+                  ${shipment.status}
+                </span>
+              </div>
+              <div style="font-weight: 700; color: #0f172a; font-size: 13px; margin-bottom: 4px;">
+                ${shipment.source} &rarr; ${shipment.destination}
+              </div>
+              <div style="font-size: 11px; color: #64748b; line-height: 1.4; margin-bottom: 8px;">
+                <div><strong>Sender:</strong> ${shipment.sender}</div>
+                <div><strong>Receiver:</strong> ${shipment.receiver}</div>
+                <div><strong>Weight &amp; Cost:</strong> ${shipment.weight} kg • ₹${shipment.cost}</div>
+              </div>
+              <button id="gm-btn-${shipment.shipmentId}" style="width: 100%; padding: 6px 10px; background: #2563eb; color: #ffffff; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                View Shipment Details &rarr;
+              </button>
             </div>
-          `,
-          iconSize: [22, 22],
-          iconAnchor: [11, 11]
+          `;
+
+          infoWindowRef.current.setContent(content);
+          infoWindowRef.current.open(map, marker);
+
+          setTimeout(() => {
+            const btn = document.getElementById(`gm-btn-${shipment.shipmentId}`);
+            if (btn) {
+              btn.onclick = () => {
+                if (onSelectShipment) onSelectShipment(shipment);
+              };
+            }
+          }, 100);
         });
 
-        const destMarker = L.marker(destCoords, { icon: destIcon });
-        destMarker.bindTooltip(`Destination: ${shipment.destination}`, { sticky: true });
-        destMarker.addTo(layerGroup);
+        markersRef.current.push(marker);
       }
     });
 
-    // Auto fit bounds if coordinates exist and not zoomed in manually
-    if (bounds.length > 0 && mapInstanceRef.current) {
+    if (hasCoords && filteredShipments.length > 0) {
       try {
-        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 6 });
-      } catch (e) {
-        // ignore bounds calculation edge cases
-      }
+        map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+      } catch (e) {}
     }
+  }, [filteredShipments, mapLoaded]);
 
-  }, [filteredShipments]);
+  // Zoom controls
+  const handleZoomIn = () => {
+    if (googleMapInstance.current) {
+      googleMapInstance.current.setZoom(googleMapInstance.current.getZoom() + 1);
+    }
+  };
 
-  // Zoom handlers
-  const handleZoomIn = () => mapInstanceRef.current?.zoomIn();
-  const handleZoomOut = () => mapInstanceRef.current?.zoomOut();
-  const handleResetView = () => {
-    mapInstanceRef.current?.setView([20.5937, 78.9629], 3);
+  const handleZoomOut = () => {
+    if (googleMapInstance.current) {
+      googleMapInstance.current.setZoom(googleMapInstance.current.getZoom() - 1);
+    }
+  };
+
+  const handleResetCenter = () => {
+    if (googleMapInstance.current) {
+      googleMapInstance.current.setCenter({ lat: 20.5937, lng: 78.9629 });
+      googleMapInstance.current.setZoom(3);
+    }
+  };
+
+  const handleMapTypeChange = (type) => {
+    setMapTypeId(type);
+    if (googleMapInstance.current && window.google) {
+      googleMapInstance.current.setMapTypeId(type);
+    }
   };
 
   return (
     <div className="page-layout-sidebar">
       
-      {/* Workspace Sidebar */}
+      {/* Sidebar Navigation */}
       <SidebarNav activePage={activePage} onNavigate={onNavigate} />
 
       {/* Main Map Viewport */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         
-        {/* Page Header */}
+        {/* Header */}
         <div className="page-header" style={{ marginBottom: '8px' }}>
           <div>
             <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -349,34 +352,46 @@ export function GlobalMapPage({ shipments = [], stats, activePage, onNavigate, o
               <span>Global Shipment Map</span>
             </h1>
             <p className="page-subtitle">
-              Standard interactive map telemetry tracking live consignments, hubs, and status routes.
+              Interactive Google Maps logistics telemetry tracking active corridors, shipment nodes, and transit corridors.
             </p>
           </div>
 
-          {/* Map Style Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>Layer:</span>
-            {Object.entries(TILE_LAYERS).map(([key, cfg]) => (
+          {/* Map Style Controls */}
+          {googleKeyExists && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>Layer:</span>
               <button
-                key={key}
-                onClick={() => setTileStyle(key)}
-                className={tileStyle === key ? 'btn-primary' : 'btn-secondary'}
+                onClick={() => handleMapTypeChange('roadmap')}
+                className={mapTypeId === 'roadmap' ? 'btn-primary' : 'btn-secondary'}
                 style={{ padding: '6px 12px', fontSize: '0.75rem' }}
               >
-                {cfg.name}
+                Roadmap
               </button>
-            ))}
-          </div>
+              <button
+                onClick={() => handleMapTypeChange('hybrid')}
+                className={mapTypeId === 'hybrid' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+              >
+                Satellite / Hybrid
+              </button>
+              <button
+                onClick={() => handleMapTypeChange('terrain')}
+                className={mapTypeId === 'terrain' ? 'btn-primary' : 'btn-secondary'}
+                style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+              >
+                Terrain
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Filter & Search Toolbar */}
         <div className="map-toolbar-card">
-          
           <div className="map-search-box">
             <Search style={{ width: '16px', height: '16px', color: 'var(--text-subtle)' }} />
             <input
               type="text"
-              placeholder="Search by ID, city, sender, receiver..."
+              placeholder="Search shipment ID, city, sender, receiver..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="map-search-input"
@@ -403,135 +418,192 @@ export function GlobalMapPage({ shipments = [], stats, activePage, onNavigate, o
               </button>
             ))}
           </div>
-
         </div>
 
-        {/* Interactive Map Container with Floating HUD Controls */}
+        {/* Map Viewport Card */}
         <div className="map-wrapper-panel">
           
-          {/* Leaflet Map Div */}
-          <div ref={mapContainerRef} className="leaflet-map-canvas" />
+          {googleKeyExists && !mapError ? (
+            <>
+              {/* Google Maps Container */}
+              <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
-          {/* Floating Top Left Control HUD (Telemetry & Stats) */}
-          <div className="map-floating-hud">
-            <div className="hud-title">
-              <Navigation style={{ width: '15px', height: '15px', color: 'var(--primary-blue)' }} />
-              <span>Fleet Telemetry</span>
-            </div>
+              {/* Floating Top Left Control HUD (Telemetry & Stats) */}
+              <div className="map-floating-hud">
+                <div className="hud-title">
+                  <Navigation style={{ width: '15px', height: '15px', color: 'var(--primary-blue)' }} />
+                  <span>Fleet Telemetry</span>
+                </div>
 
-            <div className="hud-metric-row">
-              <span className="hud-metric-label">Total Shipments:</span>
-              <span className="hud-metric-value">{stats?.total ?? shipments.length}</span>
-            </div>
-            <div className="hud-metric-row">
-              <span className="hud-metric-label">
-                <span className="legend-dot" style={{ background: STATUS_COLORS.CREATED }} /> Created:
-              </span>
-              <span className="hud-metric-value" style={{ color: STATUS_COLORS.CREATED }}>
-                {stats?.created ?? shipments.filter(s => s.status === 'CREATED').length}
-              </span>
-            </div>
-            <div className="hud-metric-row">
-              <span className="hud-metric-label">
-                <span className="legend-dot" style={{ background: STATUS_COLORS.IN_TRANSIT }} /> In Transit:
-              </span>
-              <span className="hud-metric-value" style={{ color: STATUS_COLORS.IN_TRANSIT }}>
-                {stats?.inTransit ?? shipments.filter(s => s.status === 'IN_TRANSIT').length}
-              </span>
-            </div>
-            <div className="hud-metric-row">
-              <span className="hud-metric-label">
-                <span className="legend-dot" style={{ background: STATUS_COLORS.DELIVERED }} /> Delivered:
-              </span>
-              <span className="hud-metric-value" style={{ color: STATUS_COLORS.DELIVERED }}>
-                {stats?.delivered ?? shipments.filter(s => s.status === 'DELIVERED').length}
-              </span>
-            </div>
-            <div className="hud-metric-row">
-              <span className="hud-metric-label">
-                <span className="legend-dot" style={{ background: STATUS_COLORS.CANCELLED }} /> Cancelled:
-              </span>
-              <span className="hud-metric-value" style={{ color: STATUS_COLORS.CANCELLED }}>
-                {stats?.cancelled ?? shipments.filter(s => s.status === 'CANCELLED').length}
-              </span>
-            </div>
-          </div>
-
-          {/* Floating Map Legend (Bottom Left) */}
-          <div className="map-floating-legend">
-            <div className="legend-header">Map Legend</div>
-            <div className="legend-items-list">
-              <div className="legend-entry">
-                <span className="legend-dot" style={{ background: STATUS_COLORS.CREATED }} />
-                <span>Blue: Created</span>
-              </div>
-              <div className="legend-entry">
-                <span className="legend-dot" style={{ background: STATUS_COLORS.IN_TRANSIT }} />
-                <span>Orange: In Transit</span>
-              </div>
-              <div className="legend-entry">
-                <span className="legend-dot" style={{ background: STATUS_COLORS.DELIVERED }} />
-                <span>Green: Delivered</span>
-              </div>
-              <div className="legend-entry">
-                <span className="legend-dot" style={{ background: STATUS_COLORS.CANCELLED }} />
-                <span>Red: Cancelled</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Custom Floating Zoom & Pan Controls (Bottom Right) */}
-          <div className="map-floating-controls">
-            <button onClick={handleZoomIn} className="map-ctrl-btn" title="Zoom In">
-              <ZoomIn style={{ width: '18px', height: '18px' }} />
-            </button>
-            <button onClick={handleZoomOut} className="map-ctrl-btn" title="Zoom Out">
-              <ZoomOut style={{ width: '18px', height: '18px' }} />
-            </button>
-            <button onClick={handleResetView} className="map-ctrl-btn" title="Reset Center">
-              <Crosshair style={{ width: '18px', height: '18px' }} />
-            </button>
-          </div>
-
-          {/* Selected Shipment Spotlight Card (Top Right) */}
-          {selectedShipment && (
-            <div className="map-selected-spotlight">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span className="font-mono" style={{ fontSize: '0.8125rem', fontWeight: '800', color: 'var(--primary-blue)' }}>
-                  {selectedShipment.shipmentId}
-                </span>
-                <span 
-                  style={{ 
-                    fontSize: '0.6875rem', 
-                    fontWeight: '800', 
-                    padding: '2px 8px', 
-                    borderRadius: '4px',
-                    background: `${STATUS_COLORS[selectedShipment.status]}20`,
-                    color: STATUS_COLORS[selectedShipment.status]
-                  }}
-                >
-                  {selectedShipment.status}
-                </span>
+                <div className="hud-metric-row">
+                  <span className="hud-metric-label">Total Shipments:</span>
+                  <span className="hud-metric-value">{stats?.total ?? shipments.length}</span>
+                </div>
+                <div className="hud-metric-row">
+                  <span className="hud-metric-label">
+                    <span className="legend-dot" style={{ background: STATUS_COLORS.CREATED }} /> Created:
+                  </span>
+                  <span className="hud-metric-value" style={{ color: STATUS_COLORS.CREATED }}>
+                    {stats?.created ?? shipments.filter(s => s.status === 'CREATED').length}
+                  </span>
+                </div>
+                <div className="hud-metric-row">
+                  <span className="hud-metric-label">
+                    <span className="legend-dot" style={{ background: STATUS_COLORS.IN_TRANSIT }} /> In Transit:
+                  </span>
+                  <span className="hud-metric-value" style={{ color: STATUS_COLORS.IN_TRANSIT }}>
+                    {stats?.inTransit ?? shipments.filter(s => s.status === 'IN_TRANSIT').length}
+                  </span>
+                </div>
+                <div className="hud-metric-row">
+                  <span className="hud-metric-label">
+                    <span className="legend-dot" style={{ background: STATUS_COLORS.DELIVERED }} /> Delivered:
+                  </span>
+                  <span className="hud-metric-value" style={{ color: STATUS_COLORS.DELIVERED }}>
+                    {stats?.delivered ?? shipments.filter(s => s.status === 'DELIVERED').length}
+                  </span>
+                </div>
+                <div className="hud-metric-row">
+                  <span className="hud-metric-label">
+                    <span className="legend-dot" style={{ background: STATUS_COLORS.CANCELLED }} /> Cancelled:
+                  </span>
+                  <span className="hud-metric-value" style={{ color: STATUS_COLORS.CANCELLED }}>
+                    {stats?.cancelled ?? shipments.filter(s => s.status === 'CANCELLED').length}
+                  </span>
+                </div>
               </div>
 
-              <div style={{ fontSize: '0.875rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
-                {selectedShipment.source} &rarr; {selectedShipment.destination}
+              {/* Floating Map Legend (Bottom Left) */}
+              <div className="map-floating-legend">
+                <div className="legend-header">Marker Legend</div>
+                <div className="legend-items-list">
+                  <div className="legend-entry">
+                    <span className="legend-dot" style={{ background: STATUS_COLORS.CREATED }} />
+                    <span>Blue: Created</span>
+                  </div>
+                  <div className="legend-entry">
+                    <span className="legend-dot" style={{ background: STATUS_COLORS.IN_TRANSIT }} />
+                    <span>Orange: In Transit</span>
+                  </div>
+                  <div className="legend-entry">
+                    <span className="legend-dot" style={{ background: STATUS_COLORS.DELIVERED }} />
+                    <span>Green: Delivered</span>
+                  </div>
+                  <div className="legend-entry">
+                    <span className="legend-dot" style={{ background: STATUS_COLORS.CANCELLED }} />
+                    <span>Red: Cancelled</span>
+                  </div>
+                </div>
               </div>
 
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '3px', marginBottom: '10px' }}>
-                <div><strong>Sender:</strong> {selectedShipment.sender}</div>
-                <div><strong>Receiver:</strong> {selectedShipment.receiver}</div>
-                <div><strong>Weight &amp; Cost:</strong> {selectedShipment.weight} kg • ₹{selectedShipment.cost}</div>
+              {/* Custom Floating Zoom & Pan Controls (Bottom Right) */}
+              <div className="map-floating-controls">
+                <button onClick={handleZoomIn} className="map-ctrl-btn" title="Zoom In">+</button>
+                <button onClick={handleZoomOut} className="map-ctrl-btn" title="Zoom Out">-</button>
+                <button onClick={handleResetCenter} className="map-ctrl-btn" title="Recenter">
+                  <Crosshair style={{ width: '16px', height: '16px' }} />
+                </button>
               </div>
 
-              <button
-                onClick={() => onSelectShipment(selectedShipment)}
-                className="btn-primary"
-                style={{ width: '100%', padding: '8px 12px', fontSize: '0.75rem' }}
-              >
-                <span>Open Tracking Details</span>
-                <ArrowRight style={{ width: '14px', height: '14px' }} />
-              </button>
+              {/* Selected Shipment Spotlight Card */}
+              {selectedShipment && (
+                <div className="map-selected-spotlight">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span className="font-mono" style={{ fontSize: '0.8125rem', fontWeight: '800', color: 'var(--primary-blue)' }}>
+                      {selectedShipment.shipmentId}
+                    </span>
+                    <span 
+                      style={{ 
+                        fontSize: '0.6875rem', 
+                        fontWeight: '800', 
+                        padding: '2px 8px', 
+                        borderRadius: '4px',
+                        background: `${STATUS_COLORS[selectedShipment.status]}20`,
+                        color: STATUS_COLORS[selectedShipment.status]
+                      }}
+                    >
+                      {selectedShipment.status}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '0.875rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
+                    {selectedShipment.source} &rarr; {selectedShipment.destination}
+                  </div>
+
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '3px', marginBottom: '10px' }}>
+                    <div><strong>Sender:</strong> {selectedShipment.sender}</div>
+                    <div><strong>Receiver:</strong> {selectedShipment.receiver}</div>
+                    <div><strong>Weight &amp; Cost:</strong> {selectedShipment.weight} kg • ₹{selectedShipment.cost}</div>
+                  </div>
+
+                  <button
+                    onClick={() => onSelectShipment(selectedShipment)}
+                    className="btn-primary"
+                    style={{ width: '100%', padding: '8px 12px', fontSize: '0.75rem' }}
+                  >
+                    <span>Open Tracking Details</span>
+                    <ArrowRight style={{ width: '14px', height: '14px' }} />
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Clean Configuration / Setup Required State (When Google Maps key is not present locally) */
+            <div style={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '32px',
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)'
+            }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '16px',
+                background: 'var(--primary-blue-light)',
+                color: 'var(--primary-blue)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '16px',
+                border: '1px solid var(--primary-blue-border)'
+              }}>
+                <Globe style={{ width: '32px', height: '32px' }} />
+              </div>
+
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '8px' }}>
+                Google Maps API Configuration Ready
+              </h3>
+
+              <p style={{ maxWidth: '520px', fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '20px' }}>
+                The application is integrated with the official Google Maps JavaScript API. To activate live satellite and road telemetry, add your key to <code>frontend/.env</code> as:
+              </p>
+
+              <div style={{
+                background: '#0f172a',
+                color: '#38bdf8',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.8125rem',
+                padding: '12px 20px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                textAlign: 'left'
+              }}>
+                <div>VITE_GOOGLE_MAPS_API_KEY=your_google_maps_key_here</div>
+                <div>VITE_GOOGLE_MAP_ID=your_map_id_here (optional)</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button onClick={() => onNavigate('shipments')} className="btn-primary" style={{ fontSize: '0.8125rem' }}>
+                  <span>View Shipments Manifest</span>
+                </button>
+                <button onClick={() => onNavigate('dashboard')} className="btn-secondary" style={{ fontSize: '0.8125rem' }}>
+                  <span>Open Dashboard</span>
+                </button>
+              </div>
             </div>
           )}
 
