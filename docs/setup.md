@@ -154,22 +154,11 @@ npm run dev
 ```
 The application will launch on `http://localhost:5173/` with automated proxy to the Java backend at `http://localhost:8080/`.
 
-### B. Google Maps JavaScript API Configuration (Part 15)
-To activate live satellite and road telemetry in the Global Map view:
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
-2. Create or select a Google Cloud project.
-3. Enable billing for your project as required by Google Cloud.
-4. Go to **APIs & Services > Library** and enable **Maps JavaScript API**.
-5. Go to **APIs & Services > Credentials** and click **Create Credentials > API key**.
-6. (Recommended) Restrict the API key:
-   - Application restriction: HTTP referrers (`http://localhost:5173/*`, your production domain).
-   - API restriction: Maps JavaScript API.
-7. In `frontend/.env`, set your key:
-   ```env
-   VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
-   VITE_GOOGLE_MAP_ID=your_map_id_here
-   ```
-   *(Note: Never commit your real Google Maps API key to Git; it remains local in `frontend/.env`).*
+### B. Interactive Global Logistics Map
+The Global Map view features a custom interactive vector telemetry engine rendered directly in SVG:
+- Displays domestic and international transit corridors, glowing shipment nodes, and dynamic status telemetry.
+- **Zero API Key Required**: Operates out of the box with zero external map services or configuration needed.
+- Interactive pan, zoom, fit shipments, search, and status filtering.
 
 ---
 

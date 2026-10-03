@@ -1179,35 +1179,39 @@ input, select, textarea {
    Full Background Cinematic Hero Section (Landing Page)
    ========================================================================== */
 
+.main-viewport.landing-mode {
+  max-width: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
 .landing-container {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  width: 100%;
 }
 
 .cinematic-hero-banner {
   position: relative;
-  border-radius: 28px;
-  overflow: hidden;
-  min-height: 640px;
-  box-shadow: 0 20px 48px -12px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(226, 232, 240, 0.8);
-  margin-bottom: 24px;
-  background: #ffffff url('/assets/shipflow_hero_globe.jpg') center right / cover no-repeat;
+  width: 100%;
+  min-height: calc(100vh - 68px);
+  background-color: #0b1528;
+  background-image: url('/assets/shipflow_hero_globe.jpg');
+  background-position: center right;
+  background-size: cover;
+  background-repeat: no-repeat;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 48px 48px 36px 48px;
+  padding: 60px 48px 40px 48px;
+  box-sizing: border-box;
 }
 
 .cinematic-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, 
-    rgba(255, 255, 255, 0.98) 0%, 
-    rgba(255, 255, 255, 0.92) 36%, 
-    rgba(255, 255, 255, 0.50) 65%, 
-    rgba(255, 255, 255, 0.15) 100%
-  );
+  background: linear-gradient(90deg, rgba(11, 21, 40, 0.45) 0%, rgba(11, 21, 40, 0.15) 45%, transparent 70%);
   pointer-events: none;
   z-index: 1;
 }
@@ -1215,16 +1219,43 @@ input, select, textarea {
 @media (max-width: 992px) {
   .cinematic-hero-banner {
     min-height: auto;
-    padding: 36px 24px 28px 24px;
+    padding: 36px 20px 28px 20px;
     background-position: center center;
   }
   .cinematic-hero-overlay {
-    background: linear-gradient(180deg, 
-      rgba(255, 255, 255, 0.96) 0%, 
-      rgba(255, 255, 255, 0.88) 60%, 
-      rgba(255, 255, 255, 0.65) 100%
-    );
+    background: linear-gradient(180deg, rgba(11, 21, 40, 0.6) 0%, rgba(11, 21, 40, 0.2) 60%, transparent 100%);
   }
+}
+
+.cinematic-hero-glass-card {
+  position: relative;
+  z-index: 2;
+  max-width: 540px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  padding: 40px 36px;
+  box-shadow: 0 20px 48px -8px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 640px) {
+  .cinematic-hero-glass-card {
+    padding: 24px 20px;
+    border-radius: 18px;
+  }
+}
+
+.landing-content-body {
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 60px 24px 80px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  box-sizing: border-box;
 }
 
 .cinematic-hero-content {
@@ -1816,6 +1847,61 @@ input, select, textarea {
   width: 6px;
   height: 6px;
   border-radius: 50%;
+}
+
+/* Custom Interactive SVG Logistics Map Styles */
+.custom-logistics-svg-map {
+  width: 100%;
+  height: 100%;
+  background: #0b1328;
+  user-select: none;
+  cursor: grab;
+}
+
+.custom-logistics-svg-map:active {
+  cursor: grabbing;
+}
+
+@keyframes route-dash-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+.route-path-transit-animated {
+  stroke-dasharray: 8 6;
+  animation: route-dash-flow 1.4s linear infinite;
+}
+
+@keyframes radar-pulse-anim {
+  0% {
+    r: 4;
+    opacity: 0.85;
+  }
+  100% {
+    r: 16;
+    opacity: 0;
+  }
+}
+
+.radar-pulse-ring {
+  animation: radar-pulse-anim 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.map-corridor-card {
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.map-corridor-card:hover {
+  border-color: #93c5fd;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .leaflet-animated-route {

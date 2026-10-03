@@ -120,7 +120,7 @@ export function App() {
       />
 
       {/* Main Content Viewport */}
-      <main className="main-viewport">
+      <main className={`main-viewport ${activePage === 'landing' ? 'landing-mode' : ''}`}>
         
         {loading && shipments.length === 0 ? (
           <div style={{ height: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
