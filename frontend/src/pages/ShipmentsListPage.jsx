@@ -5,8 +5,13 @@ import {
   Eye, 
   Edit3, 
   Plus, 
-  X,
-  RotateCcw
+  X, 
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  ArrowUpDown,
+  Download
 } from 'lucide-react';
 import { SidebarNav } from '../components/SidebarNav';
 import { StatusBadge } from '../components/StatusBadge';
@@ -21,7 +26,7 @@ export function ShipmentsListPage({
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 10;
 
   const filteredShipments = useMemo(() => {
     return shipments.filter((s) => {
@@ -57,11 +62,11 @@ export function ShipmentsListPage({
   return (
     <div className="page-layout-sidebar">
       
-      {/* Sidebar */}
+      {/* Workspace Sidebar Navigation */}
       <SidebarNav activePage={activePage} onNavigate={onNavigate} />
 
-      {/* Main Table Content */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Main Table Viewport Area */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
         {/* Header */}
         <div className="page-header">
@@ -70,26 +75,28 @@ export function ShipmentsListPage({
               Shipments
             </h1>
             <p className="page-subtitle">
-              View and manage all active, in-transit, and delivered consignments.
+              Manage and track all consignments recorded in Supabase PostgreSQL storage.
             </p>
           </div>
 
-          <button
-            onClick={() => onNavigate('create')}
-            className="btn-primary"
-            style={{ padding: '8px 16px', fontSize: '0.8125rem' }}
-          >
-            <Plus style={{ width: '15px', height: '15px' }} />
-            <span>Create Shipment</span>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={() => onNavigate('create')}
+              className="btn-primary"
+              style={{ padding: '8px 18px', fontSize: '0.8125rem' }}
+            >
+              <Plus style={{ width: '15px', height: '15px' }} />
+              <span>Create Shipment</span>
+            </button>
+          </div>
         </div>
 
         {/* Filter Controls Bar */}
-        <div className="card-panel" style={{ padding: '12px 16px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+        <div className="card-panel" style={{ padding: '16px 20px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
           
           {/* Search Box */}
-          <div style={{ position: 'relative', flex: '1', minWidth: '240px' }}>
-            <Search style={{ width: '15px', height: '15px', position: 'absolute', left: '12px', top: '10px', color: '#94a3b8' }} />
+          <div style={{ position: 'relative', flex: '1', minWidth: '260px' }}>
+            <Search style={{ width: '15px', height: '15px', position: 'absolute', left: '14px', top: '12px', color: '#94a3b8' }} />
             <input
               type="text"
               value={searchTerm}
@@ -97,88 +104,102 @@ export function ShipmentsListPage({
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Search by ID, sender, receiver, route..."
+              placeholder="Search by ID, sender, receiver, route hub..."
               className="form-control"
-              style={{ paddingLeft: '34px', fontSize: '0.8125rem', padding: '8px 12px 8px 34px' }}
+              style={{ paddingLeft: '38px', height: '40px', fontSize: '0.8125rem' }}
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                style={{ position: 'absolute', right: '10px', top: '8px', color: '#94a3b8' }}
+                style={{ position: 'absolute', right: '12px', top: '12px', color: '#94a3b8' }}
               >
                 <X style={{ width: '14px', height: '14px' }} />
               </button>
             )}
           </div>
 
-          {/* Status Dropdown */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="form-control"
-              style={{ padding: '8px 12px', fontSize: '0.8125rem', width: '140px', cursor: 'pointer' }}
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="CREATED">Created</option>
-              <option value="IN_TRANSIT">In Transit</option>
-              <option value="DELIVERED">Delivered</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
+          {/* Quick Filter Pill Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            {['ALL', 'CREATED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'].map((st) => (
+              <button
+                key={st}
+                onClick={() => {
+                  setStatusFilter(st);
+                  setCurrentPage(1);
+                }}
+                className={`nav-pill-btn ${statusFilter === st ? 'active' : ''}`}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  borderRadius: 'var(--radius-md)'
+                }}
+              >
+                {st === 'ALL' ? 'All Records' : st.replace('_', ' ')}
+              </button>
+            ))}
 
             {(searchTerm || statusFilter !== 'ALL') && (
               <button
                 onClick={handleClear}
                 className="btn-secondary"
-                style={{ padding: '7px 12px', fontSize: '0.75rem' }}
+                style={{ padding: '6px 12px', fontSize: '0.75rem', marginLeft: '4px' }}
                 title="Reset Filters"
               >
                 <RotateCcw style={{ width: '12px', height: '12px' }} />
-                <span>Clear</span>
+                <span>Reset</span>
               </button>
             )}
           </div>
 
         </div>
 
-        {/* Data Table */}
-        <div className="table-wrapper">
+        {/* Expansive Data Table Card */}
+        <div className="table-wrapper" style={{ boxShadow: 'var(--shadow-sm)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
           {filteredShipments.length === 0 ? (
-            <div style={{ padding: '48px 16px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Package style={{ width: '24px', height: '24px' }} />
+            <div style={{ padding: '64px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Package style={{ width: '28px', height: '28px' }} />
               </div>
-              <h3 style={{ fontSize: '0.9375rem', fontWeight: '700', color: 'var(--text-main)' }}>
+              <h3 style={{ fontSize: '1.0625rem', fontWeight: '800', color: 'var(--text-main)' }}>
                 No shipments found
               </h3>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', maxWidth: '320px' }}>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', maxWidth: '360px', lineHeight: '1.5' }}>
                 {searchTerm || statusFilter !== 'ALL'
-                  ? 'No shipments match your current search and filter criteria.'
-                  : 'Start by registering your first package consignment.'}
+                  ? 'No registered consignments match your current search query or active status filter.'
+                  : 'Start by creating your first global package consignment.'}
               </p>
-              <button
-                onClick={() => onNavigate('create')}
-                className="btn-primary"
-                style={{ padding: '8px 16px', fontSize: '0.8125rem', marginTop: '6px' }}
-              >
-                + Create Shipment
-              </button>
+              {searchTerm || statusFilter !== 'ALL' ? (
+                <button
+                  onClick={handleClear}
+                  className="btn-secondary"
+                  style={{ padding: '8px 16px', fontSize: '0.8125rem', marginTop: '6px' }}
+                >
+                  Clear Filters
+                </button>
+              ) : (
+                <button
+                  onClick={() => onNavigate('create')}
+                  className="btn-primary"
+                  style={{ padding: '8px 18px', fontSize: '0.8125rem', marginTop: '6px' }}
+                >
+                  <Plus style={{ width: '14px', height: '14px' }} />
+                  <span>Create Shipment</span>
+                </button>
+              )}
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table className="data-table">
+              <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Sender → Receiver</th>
-                    <th>Route</th>
-                    <th>Weight</th>
-                    <th>Cost</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th style={{ padding: '14px 18px', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>Shipment ID</th>
+                    <th style={{ padding: '14px 18px', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>Sender / Receiver</th>
+                    <th style={{ padding: '14px 18px', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>Corridor Route</th>
+                    <th style={{ padding: '14px 18px', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>Weight</th>
+                    <th style={{ padding: '14px 18px', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>Tariff Cost</th>
+                    <th style={{ padding: '14px 18px', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>Status</th>
+                    <th style={{ padding: '14px 18px', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)', textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -186,51 +207,65 @@ export function ShipmentsListPage({
                     <tr 
                       key={s.shipmentId}
                       onClick={() => onSelectShipment(s)}
+                      style={{ cursor: 'pointer', transition: 'background-color 0.15s ease' }}
                     >
-                      <td className="font-mono" style={{ fontWeight: '800', color: 'var(--text-main)' }}>
+                      <td className="font-mono" style={{ padding: '16px 18px', fontWeight: '800', color: 'var(--text-main)', fontSize: '0.875rem' }}>
                         {s.shipmentId}
                       </td>
 
-                      <td>
-                        <div style={{ fontWeight: '700', color: 'var(--text-main)' }}>{s.senderName}</div>
-                        <div style={{ fontSize: '0.6875rem', color: 'var(--text-subtle)' }}>to {s.receiverName}</div>
+                      <td style={{ padding: '16px 18px' }}>
+                        <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '0.875rem' }}>{s.senderName}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginTop: '2px' }}>to {s.receiverName}</div>
                       </td>
 
-                      <td>
-                        <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>{s.source}</span>
-                        <span style={{ color: '#94a3b8', margin: '0 6px' }}>→</span>
-                        <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>{s.destination}</span>
+                      <td style={{ padding: '16px 18px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8125rem' }}>
+                          <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>{s.source}</span>
+                          <span style={{ color: '#94a3b8' }}>→</span>
+                          <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>{s.destination}</span>
+                        </div>
+                        {s.packageDescription && (
+                          <div style={{ fontSize: '0.6875rem', color: 'var(--text-subtle)', marginTop: '2px' }}>
+                            {s.packageDescription}
+                          </div>
+                        )}
                       </td>
 
-                      <td className="font-mono">
-                        {s.weight?.toFixed(1)} kg
+                      <td className="font-mono" style={{ padding: '16px 18px', fontSize: '0.8125rem', color: 'var(--text-body)' }}>
+                        {Number(s.weight || 0).toFixed(1)} kg
                       </td>
 
-                      <td className="font-mono" style={{ fontWeight: '800', color: 'var(--text-main)' }}>
-                        ₹{s.cost?.toFixed(2)}
+                      <td className="font-mono" style={{ padding: '16px 18px', fontWeight: '800', color: 'var(--text-main)', fontSize: '0.875rem' }}>
+                        ${Number(s.cost || 0).toFixed(2)}
                       </td>
 
-                      <td>
+                      <td style={{ padding: '16px 18px' }}>
                         <StatusBadge status={s.status} />
                       </td>
 
-                      <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                      <td style={{ padding: '16px 18px', textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
                           <button
                             onClick={() => onSelectShipment(s)}
                             className="icon-btn"
-                            style={{ width: '30px', height: '30px' }}
-                            title="View Details"
+                            style={{ width: '32px', height: '32px' }}
+                            title="View Tracking Details"
                           >
-                            <Eye style={{ width: '14px', height: '14px' }} />
+                            <Eye style={{ width: '15px', height: '15px' }} />
                           </button>
                           <button
                             onClick={() => onOpenStatusModal(s)}
+                            disabled={s.status === 'DELIVERED' || s.status === 'CANCELLED'}
                             className="icon-btn"
-                            style={{ width: '30px', height: '30px', color: '#2563eb' }}
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              color: (s.status === 'DELIVERED' || s.status === 'CANCELLED') ? 'var(--text-subtle)' : 'var(--primary-blue)',
+                              opacity: (s.status === 'DELIVERED' || s.status === 'CANCELLED') ? 0.3 : 1
+                            }}
                             title="Update Status"
                           >
-                            <Edit3 style={{ width: '14px', height: '14px' }} />
+                            <Edit3 style={{ width: '15px', height: '15px' }} />
                           </button>
                         </div>
                       </td>
@@ -241,49 +276,51 @@ export function ShipmentsListPage({
             </div>
           )}
 
-          {/* Table Footer with Pagination */}
+          {/* Table Footer with Pagination Controls */}
           {filteredShipments.length > 0 && (
             <div style={{
-              padding: '12px 18px',
+              padding: '14px 20px',
               background: 'var(--bg-subtle)',
               borderTop: '1px solid var(--border-card)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              fontSize: '0.75rem',
+              fontSize: '0.8125rem',
               color: 'var(--text-muted)'
             }}>
               <div>
-                Showing <strong style={{ color: 'var(--text-main)' }}>{paginatedShipments.length}</strong> of{' '}
-                <strong style={{ color: 'var(--text-main)' }}>{filteredShipments.length}</strong> shipments
+                Showing <strong>{Math.min(filteredShipments.length, (currentPage - 1) * itemsPerPage + 1)}</strong> to{' '}
+                <strong>{Math.min(filteredShipments.length, currentPage * itemsPerPage)}</strong> of{' '}
+                <strong>{filteredShipments.length}</strong> total records
               </div>
 
               {totalPages > 1 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <button
-                    disabled={currentPage === 1}
                     onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
                     className="btn-secondary"
-                    style={{ padding: '4px 10px', fontSize: '0.6875rem', opacity: currentPage === 1 ? 0.4 : 1 }}
+                    style={{ padding: '5px 10px', fontSize: '0.75rem', opacity: currentPage === 1 ? 0.4 : 1 }}
                   >
-                    Previous
+                    <ChevronLeft style={{ width: '14px', height: '14px' }} />
+                    <span>Prev</span>
                   </button>
-                  <span style={{ fontWeight: '700', padding: '0 4px' }}>
+                  <span className="font-mono" style={{ fontWeight: '700', color: 'var(--text-main)' }}>
                     {currentPage} / {totalPages}
                   </span>
                   <button
-                    disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={currentPage === totalPages}
                     className="btn-secondary"
-                    style={{ padding: '4px 10px', fontSize: '0.6875rem', opacity: currentPage === totalPages ? 0.4 : 1 }}
+                    style={{ padding: '5px 10px', fontSize: '0.75rem', opacity: currentPage === totalPages ? 0.4 : 1 }}
                   >
-                    Next
+                    <span>Next</span>
+                    <ChevronRight style={{ width: '14px', height: '14px' }} />
                   </button>
                 </div>
               )}
             </div>
           )}
-
         </div>
 
       </div>
